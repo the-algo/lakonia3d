@@ -92,6 +92,7 @@ export class AppComponent implements OnInit {
   private map: any;
   public sam;
   public map_title: string;
+  public temp_roi: any = [];
 
   constructor(private wellapplicationservices: WellApplicationServices) {
   }
@@ -105,13 +106,12 @@ export class AppComponent implements OnInit {
           this.latlong[i] = JSONlat[i],
             error => console.log(error)
         }
-
-        console.log(this.latlong[0]);
         this.well_count = JSONlat.length - 1;
         this.calculate();
         this.calculateows();
       }
     );
+    this.map_title = "Overall Production Map";
     this.hypothetical();
     this.intializeData();
   }
@@ -302,10 +302,6 @@ export class AppComponent implements OnInit {
       */
 
       this.sam = Math.floor((this.temp_estimated_gross_cash_flow[i] * 100) / this.gross_cash_flow_wo_expenses);
-      console.log("------------------------------------------")
-      console.log(this.temp_estimated_gross_cash_flow[i]);
-      console.log(this.sam);
-      console.log("------------------------------------------")
 
       if (this.temp_estimated_gross_cash_flow[i] >= this.gross_cash_flow_wo_expenses) {
         this.green_count = this.green_count + 1;
@@ -349,17 +345,17 @@ export class AppComponent implements OnInit {
       //this.latlong[this.index].url = "assets/green_blur.png";
 
       if (this.sam >= 500) {
-        this.latlong[i].url = "assets/marker/plain/green.png";
+        this.latlong[this.index].url = "assets/marker/current/green_pointer.png";
       } else if (this.sam >= 401 && this.sam <= 500) {
-        this.latlong[i].url = "assets/marker/plain/yellow.png";
+        this.latlong[this.index].url = "assets/marker/current/yellow_pointer.png";
       } else if (this.sam >= 301 && this.sam <= 400) {
-        this.latlong[i].url = "assets/marker/plain/orange.png";
+        this.latlong[this.index].url = "assets/marker/current/orange_pointer.png";
       } else if (this.sam >= 201 && this.sam <= 300) {
-        this.latlong[i].url = "assets/marker/plain/red.png";
+        this.latlong[this.index].url = "assets/marker/current/red_pointer.png";
       } else if (this.sam >= 101 && this.sam <= 200) {
-        this.latlong[i].url = "assets/marker/plain/marron.png";
+        this.latlong[this.index].url = "assets/marker/current/marron_pointer.png";
       } else {
-        this.latlong[i].url = "assets/marker/plain/blue.png";
+        this.latlong[this.index].url = "assets/marker/current/blue_pointer.png";
       }
     }
 
@@ -367,17 +363,17 @@ export class AppComponent implements OnInit {
       //this.latlong[this.index].url = "assets/grey_blur.png";
 
       if (this.sam >= 500) {
-        this.latlong[i].url = "assets/marker/plain/green.png";
+        this.latlong[this.index].url = "assets/marker/current/green_pointer.png";
       } else if (this.sam >= 401 && this.sam <= 500) {
-        this.latlong[i].url = "assets/marker/plain/yellow.png";
+        this.latlong[this.index].url = "assets/marker/current/yellow_pointer.png";
       } else if (this.sam >= 301 && this.sam <= 400) {
-        this.latlong[i].url = "assets/marker/plain/orange.png";
+        this.latlong[this.index].url = "assets/marker/current/orange_pointer.png";
       } else if (this.sam >= 201 && this.sam <= 300) {
-        this.latlong[i].url = "assets/marker/plain/red.png";
+        this.latlong[this.index].url = "assets/marker/current/red_pointer.png";
       } else if (this.sam >= 101 && this.sam <= 200) {
-        this.latlong[i].url = "assets/marker/plain/marron.png";
+        this.latlong[this.index].url = "assets/marker/current/marron_pointer.png";
       } else {
-        this.latlong[i].url = "assets/marker/plain/blue.png";
+        this.latlong[this.index].url = "assets/marker/current/blue_pointer.png";
       }
     }
 
@@ -387,16 +383,63 @@ export class AppComponent implements OnInit {
 
   // Setting Markers based Production Selected
   onProductionClick(type) {
+    var temp: any = [];
+
     if (type === 'first12') {
-      this.map_title = "First 12 Month"
-    } else if (type === 'first24') {
-      this.map_title = "First 24 Month"
-    } else if (type === 'first60') {
-      this.map_title = "First 60 Month"
-    } else if (type === 'last12') {
-      this.map_title = "Last 12 Month"
+      temp = [];
+      this.map_title = "First 12 Months Production Map"
+
+      this.latlong.forEach(element => {
+        temp.push(this.calculateROI(element.firsttwelveoil, element.firsttwelvegas));
+      });
     }
-    console.log(type)
+
+    else if (type === 'first24') {
+      temp = [];
+      this.map_title = "First 24 Months Production Map"
+
+      this.latlong.forEach(element => {
+        temp.push(this.calculateROI(element.firsttwentyfouroil, element.firsttwentyfourgas));
+      });
+    }
+
+    else if (type === 'first60') {
+      temp = [];
+      this.map_title = "First 60 Months Production Map";
+
+      this.latlong.forEach(element => {
+        temp.push(this.calculateROI(element.firstsixtyoil, element.firstsixtygas));
+      });
+    }
+
+    else if (type === 'last12') {
+      temp = [];
+      this.map_title = "Last 12 Months Production Map";
+
+      this.latlong.forEach(element => {
+        temp.push(this.calculateROI(element.lasttwelveoil, element.lasttwelvegas));
+      });
+    }
+
+    if (temp.length > 0) {
+      for (var i = 0; i < temp.length - 1; i++) {
+        if (temp[i] >= 500) {
+          this.latlong[i].url = "assets/marker/plain/green.png";
+        } else if (temp[i] >= 401 && temp[i] <= 500) {
+          this.latlong[i].url = "assets/marker/plain/yellow.png";
+        } else if (temp[i] >= 301 && temp[i] <= 400) {
+          this.latlong[i].url = "assets/marker/plain/orange.png";
+        } else if (temp[i] >= 201 && temp[i] <= 300) {
+          this.latlong[i].url = "assets/marker/plain/red.png";
+        } else if (temp[i] >= 101 && temp[i] <= 200) {
+          this.latlong[i].url = "assets/marker/plain/marron.png";
+        } else {
+          this.latlong[i].url = "assets/marker/plain/blue.png";
+        }
+      }
+
+      this.temp_roi = temp;
+    }
   }
 
   // Setting the lower Slider Div value to selected marker ENCF
@@ -437,10 +480,10 @@ export class AppComponent implements OnInit {
     this.roi_percentage = (Math.floor((this.estimated_gross_cash_flow * 100) / this.gross_cash_flow_wo_expenses));
 
 
-    this.roifirsttwelve = this.calculateROI(this.firsttwelveoil, this.firsttwelvegas);
-    this.roifirsttwentyfour = this.calculateROI(this.firsttwentyfouroil, this.firsttwentyfourgas);
-    this.roifirstsixty = this.calculateROI(this.firstsixtyoil, this.firstsixtygas);
-    this.roilasttwelve = this.calculateROI(this.lasttwelveoil, this.lasttwelvegas);
+    this.roifirsttwelve = this.calculateROI(this.firsttwelveoil, this.firsttwelvegas) + "%";
+    this.roifirsttwentyfour = this.calculateROI(this.firsttwentyfouroil, this.firsttwentyfourgas) + "%";
+    this.roifirstsixty = this.calculateROI(this.firstsixtyoil, this.firstsixtygas) + "%";
+    this.roilasttwelve = this.calculateROI(this.lasttwelveoil, this.lasttwelvegas) + "%";
   }
 
   // Calculate Table ROI Value
@@ -455,7 +498,7 @@ export class AppComponent implements OnInit {
     temp1 = temp1 - ((this.production_expenses / 100) * (temp1)); //848726.1
     tempflow = this.nri_percentage * temp1; //477408.43
 
-    return (Math.floor((tempflow * 100) / this.gross_cash_flow_wo_expenses)).toString() + "%";
+    return (Math.floor((tempflow * 100) / this.gross_cash_flow_wo_expenses));
   }
 
   // Dynamically changing and calculating OWS Score
@@ -484,7 +527,6 @@ export class AppComponent implements OnInit {
   infoWindowOpened = null;
   // Getting Latitude and Longitude Value of the clicked marker
   onMarkerClickLocation(pos: number, infoRef) {
-
     if (this.infoWindowOpened === infoRef)
       return;
 
@@ -509,27 +551,18 @@ export class AppComponent implements OnInit {
         this.calculatepayout();
 
         // Setting the current well to Pin Blur
-        if (this.latlong[pos].url == "assets/green.png" || this.latlong[pos].url == "assets/green_grey.png" || this.latlong[pos].url == "assets/green_black.png") {
-          //this.latlong[pos].url = "assets/green_blur.png";
-
-
-          if (this.roi_percentage >= 300)
-            this.latlong[pos].url = "assets/img/green_grey.png";
-          else if (this.roi_percentage >= 100 && this.roi_percentage < 300)
-            this.latlong[pos].url = "assets/img/blue_grey.png";
-          else
-            this.latlong[pos].url = "assets/img/red_grey.png";
-        }
-
-        else {
-          //this.latlong[pos].url = "assets/grey_blur.png";
-
-          if (this.roi_percentage >= 300)
-            this.latlong[pos].url = "assets/img/green_grey.png";
-          else if (this.roi_percentage >= 100 && this.roi_percentage < 300)
-            this.latlong[pos].url = "assets/img/blue_grey.png";
-          else
-            this.latlong[pos].url = "assets/img/red_grey.png";
+        if (this.latlong[pos].url == "assets/marker/plain/green.png" || this.latlong[pos].url == "assets/marker/previous/green_border.png" || this.latlong[pos].url == "assets/marker/current/green_pointer.png") {
+          this.latlong[pos].url = "assets/marker/current/green_pointer.png";
+        } else if (this.latlong[pos].url == "assets/marker/plain/yellow.png" || this.latlong[pos].url == "assets/marker/previous/yellow_border.png" || this.latlong[pos].url == "assets/marker/current/yellow_pointer.png") {
+          this.latlong[pos].url = "assets/marker/current/yellow_pointer.png";
+        } else if (this.latlong[pos].url == "assets/marker/plain/orange.png" || this.latlong[pos].url == "assets/marker/previous/orange_border.png" || this.latlong[pos].url == "assets/marker/current/orange_pointer.png") {
+          this.latlong[pos].url = "assets/marker/current/orange_pointer.png";
+        } else if (this.latlong[pos].url == "assets/marker/plain/red.png" || this.latlong[pos].url == "assets/marker/previous/red_border.png" || this.latlong[pos].url == "assets/marker/current/red_pointer.png") {
+          this.latlong[pos].url = "assets/marker/current/red_pointer.png";
+        } else if (this.latlong[pos].url == "assets/marker/plain/marron.png" || this.latlong[pos].url == "assets/marker/previous/marron_border.png" || this.latlong[pos].url == "assets/marker/current/marron_pointer.png") {
+          this.latlong[pos].url = "assets/marker/current/marron_pointer.png";
+        } else if (this.latlong[pos].url == "assets/marker/plain/blue.png" || this.latlong[pos].url == "assets/marker/previous/blue_border.png" || this.latlong[pos].url == "assets/marker/current/blue_pointer.png") {
+          this.latlong[pos].url = "assets/marker/current/blue_pointer.png";
         }
 
         // Setting the previous selected well to Green Pink or Grey Pink
@@ -537,25 +570,38 @@ export class AppComponent implements OnInit {
           if (this.temp_estimated_gross_cash_flow[this.previous] >= this.gross_cash_flow_wo_expenses) {
             //this.latlong[this.previous].url = "assets/green_yellow.png";
 
-            if (this.roi_percentage >= 300)
-              this.latlong[pos].url = "assets/img/green_grey.png";
-            else if (this.roi_percentage >= 100 && this.roi_percentage < 300)
-              this.latlong[pos].url = "assets/img/blue_grey.png";
-            else
-              this.latlong[pos].url = "assets/img/red_grey.png";
-            this.previous = pos;
+            if (this.roi_percentage >= 500) {
+              this.latlong[this.previous].url = "assets/marker/previous/green_border.png";
+            } else if (this.roi_percentage >= 401 && this.roi_percentage <= 500) {
+              this.latlong[this.previous].url = "assets/marker/previous/yellow_border.png";
+            } else if (this.roi_percentage >= 301 && this.roi_percentage <= 400) {
+              this.latlong[this.previous].url = "assets/marker/previous/orange_border.png";
+            } else if (this.roi_percentage >= 201 && this.roi_percentage <= 300) {
+              this.latlong[this.previous].url = "assets/marker/previous/red_border.png";
+            } else if (this.roi_percentage >= 101 && this.roi_percentage <= 200) {
+              this.latlong[this.previous].url = "assets/marker/previous/marron_border.png";
+            } else {
+              this.latlong[this.previous].url = "assets/marker/previous/blue_border.png";
+            }
+
           }
 
           else {
             //this.latlong[this.previous].url = "assets/grey_yellow.png";
 
-            if (this.roi_percentage >= 300)
-              this.latlong[pos].url = "assets/img/green_grey.png";
-            else if (this.roi_percentage >= 100 && this.roi_percentage < 300)
-              this.latlong[pos].url = "assets/img/blue_grey.png";
-            else
-              this.latlong[pos].url = "assets/img/red_grey.png";
-            this.previous = pos;
+            if (this.roi_percentage >= 500) {
+              this.latlong[this.previous].url = "assets/marker/previous/green_border.png";
+            } else if (this.roi_percentage >= 401 && this.roi_percentage <= 500) {
+              this.latlong[this.previous].url = "assets/marker/previous/yellow_border.png";
+            } else if (this.roi_percentage >= 301 && this.roi_percentage <= 400) {
+              this.latlong[this.previous].url = "assets/marker/previous/orange_border.png";
+            } else if (this.roi_percentage >= 201 && this.roi_percentage <= 300) {
+              this.latlong[this.previous].url = "assets/marker/previous/red_border.png";
+            } else if (this.roi_percentage >= 101 && this.roi_percentage <= 200) {
+              this.latlong[this.previous].url = "assets/marker/previous/marron_border.png";
+            } else {
+              this.latlong[this.previous].url = "assets/marker/previous/blue_border.png";
+            }
           }
         }
 
@@ -616,23 +662,37 @@ export class AppComponent implements OnInit {
       if (this.latlong[this.index].grosscashflow >= this.gross_cash_flow_wo_expenses) {
         //this.latlong[this.index].url = "assets/green.png";
 
-        if (this.roi_percentage >= 300)
-          this.latlong[this.index].url = "assets/img/green_grey.png";
-        else if (this.roi_percentage >= 100 && this.roi_percentage < 300)
-          this.latlong[this.index].url = "assets/img/blue_grey.png";
-        else
-          this.latlong[this.index].url = "assets/img/red_grey.png";
+        if (this.sam >= 500) {
+          this.latlong[this.index].url = "assets/marker/plain/green.png";
+        } else if (this.sam >= 401 && this.sam <= 500) {
+          this.latlong[this.index].url = "assets/marker/plain/yellow.png";
+        } else if (this.sam >= 301 && this.sam <= 400) {
+          this.latlong[this.index].url = "assets/marker/plain/orange.png";
+        } else if (this.sam >= 201 && this.sam <= 300) {
+          this.latlong[this.index].url = "assets/marker/plain/red.png";
+        } else if (this.sam >= 101 && this.sam <= 200) {
+          this.latlong[this.index].url = "assets/marker/plain/marron.png";
+        } else {
+          this.latlong[this.index].url = "assets/marker/plain/blue.png";
+        }
       }
 
       else {
         //this.latlong[this.index].url = "assets/grey.png";
 
-        if (this.roi_percentage >= 300)
-          this.latlong[this.index].url = "assets/img/green_grey.png";
-        else if (this.roi_percentage >= 100 && this.roi_percentage < 300)
-          this.latlong[this.index].url = "assets/img/blue_grey.png";
-        else
-          this.latlong[this.index].url = "assets/img/red_grey.png";
+        if (this.sam >= 500) {
+          this.latlong[this.index].url = "assets/marker/plain/green.png";
+        } else if (this.sam >= 401 && this.sam <= 500) {
+          this.latlong[this.index].url = "assets/marker/plain/yellow.png";
+        } else if (this.sam >= 301 && this.sam <= 400) {
+          this.latlong[this.index].url = "assets/marker/plain/orange.png";
+        } else if (this.sam >= 201 && this.sam <= 300) {
+          this.latlong[this.index].url = "assets/marker/plain/red.png";
+        } else if (this.sam >= 101 && this.sam <= 200) {
+          this.latlong[this.index].url = "assets/marker/plain/marron.png";
+        } else {
+          this.latlong[this.index].url = "assets/marker/plain/blue.png";
+        }
       }
     }
 
@@ -640,23 +700,37 @@ export class AppComponent implements OnInit {
       if (this.latlong[position].grosscashflow >= this.gross_cash_flow_wo_expenses) {
         //this.latlong[position].url = "assets/green_blur.png";
 
-        if (this.roi_percentage >= 300)
-          this.latlong[position].url = "assets/img/green_grey.png";
-        else if (this.roi_percentage >= 100 && this.roi_percentage < 300)
-          this.latlong[position].url = "assets/img/blue_grey.png";
-        else
-          this.latlong[position].url = "assets/img/red_grey.png";
+        if (this.sam >= 500) {
+          this.latlong[this.index].url = "assets/marker/current/green_pointer.png";
+        } else if (this.sam >= 401 && this.sam <= 500) {
+          this.latlong[this.index].url = "assets/marker/current/yellow_pointer.png";
+        } else if (this.sam >= 301 && this.sam <= 400) {
+          this.latlong[this.index].url = "assets/marker/current/orange_pointer.png";
+        } else if (this.sam >= 201 && this.sam <= 300) {
+          this.latlong[this.index].url = "assets/marker/current/red_pointer.png";
+        } else if (this.sam >= 101 && this.sam <= 200) {
+          this.latlong[this.index].url = "assets/marker/current/marron_pointer.png";
+        } else {
+          this.latlong[this.index].url = "assets/marker/current/blue_pointer.png";
+        }
       }
 
       else {
         //this.latlong[position].url = "assets/grey_blur.png";
 
-        if (this.roi_percentage >= 300)
-          this.latlong[position].url = "assets/img/green_grey.png";
-        else if (this.roi_percentage >= 100 && this.roi_percentage < 300)
-          this.latlong[position].url = "assets/img/blue_grey.png";
-        else
-          this.latlong[position].url = "assets/img/red_grey.png";
+        if (this.sam >= 500) {
+          this.latlong[this.index].url = "assets/marker/current/green_pointer.png";
+        } else if (this.sam >= 401 && this.sam <= 500) {
+          this.latlong[this.index].url = "assets/marker/current/yellow_pointer.png";
+        } else if (this.sam >= 301 && this.sam <= 400) {
+          this.latlong[this.index].url = "assets/marker/current/orange_pointer.png";
+        } else if (this.sam >= 201 && this.sam <= 300) {
+          this.latlong[this.index].url = "assets/marker/current/red_pointer.png";
+        } else if (this.sam >= 101 && this.sam <= 200) {
+          this.latlong[this.index].url = "assets/marker/current/marron_pointer.png";
+        } else {
+          this.latlong[this.index].url = "assets/marker/current/blue_pointer.png";
+        }
       }
 
       this.previous = this.index;
