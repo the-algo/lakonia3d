@@ -7,10 +7,38 @@
         </div>
         <div class="row">
             <div class="col-md-12" style="text-align:justify">
-                What is close-ology? Close-ology is the analysis of oil and gas well production surrounding a proposed drilling location
-                to help determine the economic viability of an oil and gas drilling partnership.
+                To use the Close-ology map, simply enter the data requested in the fields below. The map is populated with color coded well
+                points within a predetermined radius of the location selected. The color of each well point reflects an estimated
+                ROI, which in turn is based on the parameters you entered.
             </div>
         </div>
+
+        <br>
+        <div class="row">
+            <div class="col-md-12" style="font-weight:bold">
+                Terms:
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12" style="text-align:justify">
+                <u>Oil and Gas price:</u> Choose an oil and gas price and enter it here. Remember, this map is for illustrative
+                purposes only and the oil and gas price you chose will not change for the life of the investment. Since oil
+                and gas prices fluctuate daily the model will not reflect ultimate returns.
+                <br>
+                <br>
+                <u>Production History By Months:</u> This number breaks down the ROI of the well you selected over the first
+                12, 24, 60 and last 12 months of production. Remember ROI, and in turn Production History by Months, is only
+                reflective of the parameters you select, i.e. gas price, oil price, production expenses, daily production
+                etc.
+                <br>
+                <br>
+                <u>Green Circle:</u> The number in the green circle on the left of the page is your OWS Score. It reflects the
+                combined estimated average ROI for all of the well points in the Close-ology map, based on your entered parameters,
+                assuming the data points you entered hold true.
+            </div>
+        </div>
+
     </div>
 
     <div class="row" style="padding-top:10px">
@@ -96,14 +124,26 @@
                     <div class="col-md-7">{{ partner_name }}</div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-5">Partnership Raise:</div>
-                    <div class="col-md-7">{{ investment_amount | currency:'USD' : true : '2.0-0' }}</div>
+                <div class="row" style="margin-top: 10px">
+                    <div class="col-md-5" style="padding-top: 5px;">Partnership Raise:</div>
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <input type="number" [(ngModel)]="partnership_raise" min="0" (change)="calculate()" class="form-control" />
+                            <span class="input-group-addon" style="font-weight:bold">&nbsp;$&nbsp;</span>
+                        </div>
+                    </div>
+                    <!-- <div class="col-md-7">{{ investment_amount | currency:'USD' : true : '2.0-0' }}</div> -->
                 </div>
 
-                <div class="row">
-                    <div class="col-md-5">Partnership Terms:</div>
-                    <div class="col-md-7">{{ nri_percentage | percent:'2.2-2' }} NRI (Net Revenue Interest)</div>
+                <div class="row" style="margin-top: 10px">
+                    <div class="col-md-5" style="padding-top: 5px;">Partnership Terms:</div>
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <input type="number" [(ngModel)]="partnership_term" min="0" (change)="calculate()" class="form-control" />
+                            <span class="input-group-addon" style="font-weight:bold">%</span>
+                        </div>
+                    </div>
+                    <!-- <div class="col-md-7">{{ nri_percentage | percent:'2.2-2' }} NRI (Net Revenue Interest)</div> -->
                 </div>
             </div>
 
@@ -112,7 +152,7 @@
                     THIS PARTNERSHIP WILL NEED TO GENERATE
                     <br /> NET CASH FLOW OF
                     <br />
-                    <span class="greenColor">{{ gross_cash_flow_wo_expenses | currency:'USD' : true : '2.0-0' }} TO PAYOUT</span>
+                    <span class="greenColor">{{ partnership_raise | currency:'USD' : true : '2.0-0' }} TO PAYOUT</span>
                     <br /> ** AFTER: TERMS - PRODUCTION EXPENSES - TAXES **
                 </div>
             </div>
@@ -137,13 +177,16 @@
                         <agm-marker *ngFor="let marker of latlong; let pos = index" iconUrl="{{ marker.url }}" (markerClick)="onMarkerClickLocation(pos, infoRef)"
                             [latitude]="marker.latitude" [longitude]="marker.longitude">
                             <agm-info-window #infoRef>
-                                <strong>ROI : {{ roi_percentage }} %</strong>
+                                <strong>ROI : {{ marker.roi_percentage? marker.roi_percentage : '0' }} %</strong>
                             </agm-info-window>
                         </agm-marker>
                     </agm-map>
                 </div>
             </div>
 
+            <br>
+
+            <!--             
             <div class="row" style="padding-left:3px;">
                 <div class="col-md-12">
                     <ion-range-slider type="single" min="0" max="{{well_count}}" [from]="green_count" (onChange)="myOnChange()" (onFinish)="myOnFinish($event)">
@@ -159,126 +202,61 @@
 
                 </div>
             </div>
+ -->
+            <div class="row">
+                <div class="col-md-12" style="text-align: center">
+                    <button class="btn" (click)="onReload()">Reset Map</button>
+                </div>
+            </div>
 
             <br>
 
             <div class="row">
-                <div class="col-md-4">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/plain/blue.png" height="20px" width="18px"> : ROI 0% to 100%.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/plain/marron.png" height="20px" width="18px"> : ROI 101% to 200%.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/plain/red.png" height="20px" width="18px"> : ROI 201% to 300%.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/plain/orange.png" height="20px" width="18px"> : ROI 301% to 400%.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/plain/yellow.png" height="20px" width="18px"> : ROI 401% to 500%.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/plain/green.png" height="20px" width="18px"> : ROI is above 500%.
-                        </div>
-                    </div>
+                <div class="col-xs-2" style="text-align:center">
+                    <img src="assets/marker/plain/blue.png" height="25px" width="25px">
                 </div>
-
-                <div class="col-md-4">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/previous/blue_border.png" height="20px" width="18px"> : Previous Selected.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/previous/marron_border.png" height="20px" width="18px"> : Previous Selected.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/previous/red_border.png" height="20px" width="18px"> : Previous Selected.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/previous/orange_border.png" height="20px" width="18px"> : Previous Selected.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/previous/yellow_border.png" height="20px" width="18px"> : Previous Selected.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/previous/green_border.png" height="20px" width="18px"> : Previous Selected.
-                        </div>
-                    </div>
+                <div class="col-xs-2" style="text-align:center">
+                    <img src="assets/marker/plain/marron.png" height="25px" width="25px">
                 </div>
-
-                <div class="col-md-4">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/current/blue_pointer.png" height="20px" width="18px"> : Current Selected.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/current/marron_pointer.png" height="20px" width="18px"> : Current Selected.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/current/red_pointer.png" height="20px" width="18px"> : Current Selected.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/current/orange_pointer.png" height="20px" width="18px"> : Current Selected.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/current/yellow_pointer.png" height="20px" width="18px"> : Current Selected.
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <img src="assets/marker/current/green_pointer.png" height="20px" width="18px"> : Current Selected.
-                        </div>
-                    </div>
+                <div class="col-xs-2" style="text-align:center">
+                    <img src="assets/marker/plain/red.png" height="25px" width="25px">
+                </div>
+                <div class="col-xs-2" style="text-align:center">
+                    <img src="assets/marker/plain/orange.png" height="25px" width="25px">
+                </div>
+                <div class="col-xs-2" style="text-align:center">
+                    <img src="assets/marker/plain/yellow.png" height="25px" width="25px">
+                </div>
+                <div class="col-xs-2" style="text-align:center">
+                    <img src="assets/marker/plain/green.png" height="25px" width="25px">
                 </div>
             </div>
-
-
+            <div class="row">
+                <div class="col-xs-2" style="text-align:center; background-color: #30AAF4; height: 15px"></div>
+                <div class="col-xs-2" style="text-align:center; background-color: #7740A7; height: 15px"></div>
+                <div class="col-xs-2" style="text-align:center; background-color: #F13D38; height: 15px"></div>
+                <div class="col-xs-2" style="text-align:center; background-color: #ED882D; height: 15px"></div>
+                <div class="col-xs-2" style="text-align:center; background-color: #F7EE2B; height: 15px"></div>
+                <div class="col-xs-2" style="text-align:center; background-color: #499130; height: 15px"></div>
+            </div>
+            <div class="row">
+                <div class="col-xs-2" style="text-align:center; font-size: 11px">0% to 100%</div>
+                <div class="col-xs-2" style="text-align:center; font-size: 11px">101% to 200%</div>
+                <div class="col-xs-2" style="text-align:center; font-size: 11px">201% to 300%</div>
+                <div class="col-xs-2" style="text-align:center; font-size: 11px">301% to 400%</div>
+                <div class="col-xs-2" style="text-align:center; font-size: 11px">401% to 500%</div>
+                <div class="col-xs-2" style="text-align:center; font-size: 11px">501%+</div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-xs-6" style="text-align:center;">
+                    <img src="assets/pointer.png" height="20px" width="22px"> Current Selected
+                </div>
+                <div class="col-xs-6" style="text-align:center;">
+                    <img src="assets/border.png" height="20px" width="25px"> Previous Selected
+                </div>
+            </div>
+            <br>
         </div>
 
         <div class="col-md-6">
@@ -381,14 +359,6 @@
 
                 <br>
 
-                <!-- 
-                    <div class="row">
-                        <div class="col-md-12" style="font-weight: bold; padding-top:15px; text-align:justify">
-                            CHANGE YOUR OIL PRICE, YOUR GAS PRICE, AND PRODUCTION EXPENSES TO EXPLORE PAY OUT SCENARIOS FOR THE WELL SELECTED
-                        </div>
-                    </div>
-                -->
-
                 <div class="row">
                     <div class="col-md-12">
                         <table class="table" style="font-size: 14px;">
@@ -404,17 +374,17 @@
                             <tbody>
                                 <tr>
                                     <th scope="row">Barrels of Oil</th>
-                                    <td>{{firsttwelveoil}}</td>
-                                    <td>{{firsttwentyfouroil}}</td>
-                                    <td>{{firstsixtyoil}}</td>
-                                    <td>{{lasttwelveoil}}</td>
+                                    <td>{{firsttwelveoil ? firsttwelveoil : '0'}}</td>
+                                    <td>{{firsttwentyfouroil ? firsttwentyfouroil : '0'}}</td>
+                                    <td>{{firstsixtyoil ? firstsixtyoil : '0'}}</td>
+                                    <td>{{lasttwelveoil ? lasttwelveoil : '0'}}</td>
                                 </tr>
                                 <tr>
                                     <th scope="row">MCF of Gas</th>
-                                    <td>{{firsttwelvegas}}</td>
-                                    <td>{{firsttwentyfourgas}}</td>
-                                    <td>{{firstsixtygas}}</td>
-                                    <td>{{lasttwelvegas}}</td>
+                                    <td>{{firsttwelvegas ? firsttwelvegas : '0'}}</td>
+                                    <td>{{firsttwentyfourgas ? firsttwentyfourgas : '0'}}</td>
+                                    <td>{{firstsixtygas ? firstsixtygas : '0'}}</td>
+                                    <td>{{lasttwelvegas ? lasttwelvegas : '0'}}</td>
                                 </tr>
                                 <tr>
                                     <th scope="row">ROI</th>
@@ -428,7 +398,7 @@
                     </div>
                 </div>
 
-                <div class="row" style="padding-top:15px">
+                <div class="row">
                     <div class="col-md-6">Your Oil Price:
                         <i class="glyphicon glyphicon-question-sign" title="Any amount, in dollars, that you estimate the oil price to be. Price of the Estimated Daily Oil Production to be sold."></i>
                     </div>
@@ -521,24 +491,6 @@
                         </div>
                     </accordion-heading>
                     <div class="panel-body">
-                        <!--                         
-                                <h3 style="margin-top:-1px;">Hope-thetical Price, Production, and Cash Flow Scenarios</h3>
-                                <h4>This interactive Calculator allows you to input values in order to create a unique investment scenario
-                                    and expectation under the terms of the intended partnership.</h4>
-                                <ul>
-                                    <li>Hypothetical Investment Amount</li>
-                                    <li>Estimated Daily Oil Production</li>
-                                    <li>Your Estimated Oil Price</li>
-                                    <li>Estimated Ultimate Recovery</li>
-                                </ul>
-                                <hr style="border-top: 1px solid #CDCDCD"> Explore The Cash Flow Potential For THE:
-                                <span class="tool" title="Partnership Name: LC GoOpCo Manuel #1, LP &#013;&#010;Total Raise: $850,000 &#013;&#010;Total Net Revenue Interest (NRI): 56.25% &#013;&#010;Unit Cost: $170,000 &#013;&#010;Number of Units: 5">
-                                    <b>
-                                        <u>LC GoOpCo Manuel #1</u>
-                                    </b>
-                                </span>
-                                -->
-
                         <div class="row">
                             <div class="col-md-2">
                                 <img src="assets/graphics.png" class="image-responsive" />
@@ -584,7 +536,7 @@
                                                 Total Raise:
                                             </div>
                                             <div class="col-md-8">
-                                                {{ investment_amount | currency:'USD' : true : '2.0-0' }}
+                                                {{ partnership_raise | currency:'USD' : true : '2.0-0' }}
                                             </div>
                                         </div>
                                         <div class="row">
@@ -592,7 +544,7 @@
                                                 Terms:
                                             </div>
                                             <div class="col-md-8">
-                                                {{ nri_percentage | percent:'2.2-2' }} NRI (Net Revenue Interest)
+                                                {{ partnership_term | percent:'2.2-2' }} NRI (Net Revenue Interest)
                                             </div>
                                         </div>
                                         <div class="row">

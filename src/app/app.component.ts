@@ -75,8 +75,8 @@ export class AppComponent implements OnInit {
 
   public estimated_gross_cash_flow: number = 0;
   public temp_estimated_gross_cash_flow = [];
-  public oil_price = 60;
-  public gas_price = 3;
+  public oil_price = 0;
+  public gas_price = 0;
 
   public partner_name = "LC GoOpCo Manuel #1, LP";
 
@@ -90,10 +90,16 @@ export class AppComponent implements OnInit {
   public slider_percentage: string = "0%";
 
   private map: any;
-  public sam;
+  public temp_roi_percentage;
   public map_title: string;
   public temp_roi: any = [];
+  public type: string = null;
+  public clicked: number = -1;
+  infoWindowOpened: any = null;
+  public partnership_raise = 850000;
+  public partnership_term = 56.25;
 
+  // Dependency Injection
   constructor(private wellapplicationservices: WellApplicationServices) {
   }
 
@@ -116,6 +122,7 @@ export class AppComponent implements OnInit {
     this.intializeData();
   }
 
+  // Tilt the Map by 45 degree 
   changeTilt(map) {
     this.map = map;
     this.map.setTilt(45);
@@ -123,6 +130,15 @@ export class AppComponent implements OnInit {
 
   // Get the selected Miles from the Radio Button to set the markers on Map
   getMiles(miles: string) {
+
+    this.oil_price = 0;
+    this.gas_price = 0;
+    this.infoWindowOpened = null;
+    this.markerarray = [];
+    this.type = null;
+    this.temp_roi = [];
+
+    this.map_title = "Overall Production Map";
 
     while (this.latlong.length > 0) {
       this.latlong.pop();
@@ -136,7 +152,7 @@ export class AppComponent implements OnInit {
               error => console.log(error)
           }
 
-          console.log(this.latlong);
+          //console.log(this.latlong);
 
           this.firstsixtygas = "0";
           this.firstsixtyoil = "0";
@@ -147,19 +163,21 @@ export class AppComponent implements OnInit {
           this.lasttwelvegas = "0";
           this.lasttwelveoil = "0";
 
-          this.roifirsttwelve = "0";
-          this.roifirsttwentyfour = "0";
-          this.roifirstsixty = "0";
-          this.roilasttwelve = "0";
+          this.roifirsttwelve = "0%";
+          this.roifirsttwentyfour = "0%";
+          this.roifirstsixty = "0%";
+          this.roilasttwelve = "0%";
 
           this.well_count = JSONlat.length - 1;
           this.previous = -1;
           this.current = -1;
           this.index = -1;
           this.zoom = 14;
+          this.visit = -1;
+          this.clicked = -1;
           this.calculate();
-          this.calculateows();
-          this.store_display(this.current);
+          //this.calculateows();
+          //this.store_display(this.current);
         }
       );
     }
@@ -172,7 +190,7 @@ export class AppComponent implements OnInit {
               error => console.log(error)
           }
 
-          console.log(this.latlong);
+          //console.log(this.latlong);
 
           this.firstsixtygas = "0";
           this.firstsixtyoil = "0";
@@ -183,19 +201,21 @@ export class AppComponent implements OnInit {
           this.lasttwelvegas = "0";
           this.lasttwelveoil = "0";
 
-          this.roifirsttwelve = "0";
-          this.roifirsttwentyfour = "0";
-          this.roifirstsixty = "0";
-          this.roilasttwelve = "0";
+          this.roifirsttwelve = "0%";
+          this.roifirsttwentyfour = "0%";
+          this.roifirstsixty = "0%";
+          this.roilasttwelve = "0%";
 
           this.well_count = JSONlat.length - 1;
           this.previous = -1;
           this.current = -1;
           this.index = -1;
           this.zoom = 12;
+          this.visit = -1;
+          this.clicked = -1;
           this.calculate();
-          this.calculateows();
-          this.store_display(this.current);
+          //this.calculateows();
+          //this.store_display(this.current);
         }
       );
     }
@@ -208,7 +228,7 @@ export class AppComponent implements OnInit {
               error => console.log(error)
           }
 
-          console.log(this.latlong);
+          //console.log(this.latlong);
 
           this.firstsixtygas = "0";
           this.firstsixtyoil = "0";
@@ -219,19 +239,21 @@ export class AppComponent implements OnInit {
           this.lasttwelvegas = "0";
           this.lasttwelveoil = "0";
 
-          this.roifirsttwelve = "0";
-          this.roifirsttwentyfour = "0";
-          this.roifirstsixty = "0";
-          this.roilasttwelve = "0";
+          this.roifirsttwelve = "0%";
+          this.roifirsttwentyfour = "0%";
+          this.roifirstsixty = "0%";
+          this.roilasttwelve = "0%";
 
           this.well_count = JSONlat.length - 1;
           this.previous = -1;
           this.current = -1;
           this.index = -1;
           this.zoom = 11;
+          this.visit = -1;
+          this.clicked = -1;
           this.calculate();
-          this.calculateows();
-          this.store_display(this.current);
+          //this.calculateows();
+          //this.store_display(this.current);
         }
       );
     }
@@ -239,6 +261,11 @@ export class AppComponent implements OnInit {
 
   // Dynamically changing the Estimated Gross Cash Flow Value
   calculate() {
+    if (this.clicked === 1) {
+      this.calculateROIPercentage(this.type);
+      //console.log(this.temp_roi);
+    }
+
     this.length = this.well_count;
 
     let temp1 = 0, temp2 = 0;
@@ -250,13 +277,29 @@ export class AppComponent implements OnInit {
     temp2 = temp2 - (this.tax_gas * temp2);
     temp1 = temp1 + temp2;
     temp1 = temp1 - ((this.production_expenses / 100) * (temp1));
-    this.estimated_gross_cash_flow = this.nri_percentage * temp1;
+    this.estimated_gross_cash_flow = (this.partnership_term / 100) * temp1;
 
     this.green_count = 0;
     this.yellow_count = 0;
 
     if (this.visit != -1) {
+      for (var i = 0; i < this.latlong.length; i++) {
+        this.latlong[i].roi_percentage = null;
+      }
+
+      for (var i = 0; i < this.markerarray.length - 1; i++) {
+        this.infoWindowOpened = this.markerarray[i];
+        if (this.infoWindowOpened !== undefined && this.infoWindowOpened !== null)
+          this.infoWindowOpened.close();
+      }
+
+      //this.markerarray = [];
+      //this.infoWindowOpened = null;
+
       this.calculatepayout();
+
+      if (this.infoWindowOpened !== null && this.infoWindowOpened !== undefined)
+        this.infoWindowOpened.innerHtml = this.latlong[this.index].roi_percentage;
     }
 
     // Setting the Text Color of ENCF if it is greater than 1511111
@@ -264,7 +307,7 @@ export class AppComponent implements OnInit {
       this.estimated_gross_cash_flow = 0;
     }
 
-    if (this.estimated_gross_cash_flow >= this.gross_cash_flow_wo_expenses) {
+    if (this.estimated_gross_cash_flow >= this.partnership_raise) {
       this.textcolor = 'green';
     }
 
@@ -282,109 +325,164 @@ export class AppComponent implements OnInit {
 
       this.temp_estimated_gross_cash_flow[i] = temp1 + temp2;
       this.temp_estimated_gross_cash_flow[i] = this.temp_estimated_gross_cash_flow[i] - ((this.production_expenses / 100) * (this.temp_estimated_gross_cash_flow[i]));
-      this.temp_estimated_gross_cash_flow[i] = this.nri_percentage * this.temp_estimated_gross_cash_flow[i];
+      this.temp_estimated_gross_cash_flow[i] = (this.partnership_term / 100) * this.temp_estimated_gross_cash_flow[i];
 
       this.latlong[i].grosscashflow = this.temp_estimated_gross_cash_flow[i];
 
-      /*
-      // Setting the well color to green and grey based on condition
-      if (this.temp_estimated_gross_cash_flow[i] >= this.gross_cash_flow_wo_expenses) {
-        this.green_count = this.green_count + 1;
-        //this.latlong[i].url = "assets/img/green_marker.png";
-        this.latlong[i].url = "assets/img/pin.png";
-      }
+      this.temp_roi_percentage = Math.floor((this.temp_estimated_gross_cash_flow[i] * 100) / this.partnership_raise);
 
-      else {
-        this.yellow_count = this.yellow_count + 1;
-        //this.latlong[i].url = "assets/grey_marker.png";
-        this.latlong[i].url = "assets/img/pin2.png";
-      }
-      */
 
-      this.sam = Math.floor((this.temp_estimated_gross_cash_flow[i] * 100) / this.gross_cash_flow_wo_expenses);
+      if (this.clicked === 1) {
+        if (this.temp_roi.length > 0) {
+          for (var i = 0; i < this.temp_roi.length - 1; i++) {
+            if (i === this.index) {
+              if (this.temp_roi[i] >= 500) {
+                this.latlong[this.index].url = "assets/marker/current/green_pointer.png";
+              } else if (this.temp_roi[i] >= 401 && this.temp_roi[i] <= 500) {
+                this.latlong[this.index].url = "assets/marker/current/yellow_pointer.png";
+              } else if (this.temp_roi[i] >= 301 && this.temp_roi[i] <= 400) {
+                this.latlong[this.index].url = "assets/marker/current/orange_pointer.png";
+              } else if (this.temp_roi[i] >= 201 && this.temp_roi[i] <= 300) {
+                this.latlong[this.index].url = "assets/marker/current/red_pointer.png";
+              } else if (this.temp_roi[i] >= 101 && this.temp_roi[i] <= 200) {
+                this.latlong[this.index].url = "assets/marker/current/marron_pointer.png";
+              } else {
+                this.latlong[this.index].url = "assets/marker/current/blue_pointer.png";
+              }
+            }
 
-      if (this.temp_estimated_gross_cash_flow[i] >= this.gross_cash_flow_wo_expenses) {
-        this.green_count = this.green_count + 1;
-        //this.latlong[i].url = "assets/img/green_marker.png";
-        if (this.sam >= 500) {
-          this.latlong[i].url = "assets/marker/plain/green.png";
-        } else if (this.sam >= 401 && this.sam <= 500) {
-          this.latlong[i].url = "assets/marker/plain/yellow.png";
-        } else if (this.sam >= 301 && this.sam <= 400) {
-          this.latlong[i].url = "assets/marker/plain/orange.png";
-        } else if (this.sam >= 201 && this.sam <= 300) {
-          this.latlong[i].url = "assets/marker/plain/red.png";
-        } else if (this.sam >= 101 && this.sam <= 200) {
-          this.latlong[i].url = "assets/marker/plain/marron.png";
-        } else {
-          this.latlong[i].url = "assets/marker/plain/blue.png";
+            else {
+              if (this.temp_roi[i] >= 500) {
+                this.latlong[i].url = "assets/marker/plain/green.png";
+              } else if (this.temp_roi[i] >= 401 && this.temp_roi[i] <= 500) {
+                this.latlong[i].url = "assets/marker/plain/yellow.png";
+              } else if (this.temp_roi[i] >= 301 && this.temp_roi[i] <= 400) {
+                this.latlong[i].url = "assets/marker/plain/orange.png";
+              } else if (this.temp_roi[i] >= 201 && this.temp_roi[i] <= 300) {
+                this.latlong[i].url = "assets/marker/plain/red.png";
+              } else if (this.temp_roi[i] >= 101 && this.temp_roi[i] <= 200) {
+                this.latlong[i].url = "assets/marker/plain/marron.png";
+              } else {
+                this.latlong[i].url = "assets/marker/plain/blue.png";
+              }
+            }
+          }
         }
       }
 
       else {
-        this.yellow_count = this.yellow_count + 1;
-        //this.latlong[i].url = "assets/grey_marker.png";
-        if (this.sam >= 500) {
-          this.latlong[i].url = "assets/marker/plain/green.png";
-        } else if (this.sam >= 401 && this.sam <= 500) {
-          this.latlong[i].url = "assets/marker/plain/yellow.png";
-        } else if (this.sam >= 301 && this.sam <= 400) {
-          this.latlong[i].url = "assets/marker/plain/orange.png";
-        } else if (this.sam >= 201 && this.sam <= 300) {
-          this.latlong[i].url = "assets/marker/plain/red.png";
-        } else if (this.sam >= 101 && this.sam <= 200) {
-          this.latlong[i].url = "assets/marker/plain/marron.png";
-        } else {
-          this.latlong[i].url = "assets/marker/plain/blue.png";
+        if (this.temp_estimated_gross_cash_flow[i] >= this.partnership_raise) {
+          this.green_count = this.green_count + 1;
+          //this.latlong[i].url = "assets/img/green_marker.png";
+
+          if (i === this.index) {
+            if (this.temp_roi_percentage >= 500) {
+              this.latlong[this.index].url = "assets/marker/current/green_pointer.png";
+            } else if (this.temp_roi_percentage >= 401 && this.temp_roi_percentage <= 500) {
+              this.latlong[this.index].url = "assets/marker/current/yellow_pointer.png";
+            } else if (this.temp_roi_percentage >= 301 && this.temp_roi_percentage <= 400) {
+              this.latlong[this.index].url = "assets/marker/current/orange_pointer.png";
+            } else if (this.temp_roi_percentage >= 201 && this.temp_roi_percentage <= 300) {
+              this.latlong[this.index].url = "assets/marker/current/red_pointer.png";
+            } else if (this.temp_roi_percentage >= 101 && this.temp_roi_percentage <= 200) {
+              this.latlong[this.index].url = "assets/marker/current/marron_pointer.png";
+            } else {
+              this.latlong[this.index].url = "assets/marker/current/blue_pointer.png";
+            }
+          }
+
+          else {
+            if (this.temp_roi_percentage >= 500) {
+              this.latlong[i].url = "assets/marker/plain/green.png";
+            } else if (this.temp_roi_percentage >= 401 && this.temp_roi_percentage <= 500) {
+              this.latlong[i].url = "assets/marker/plain/yellow.png";
+            } else if (this.temp_roi_percentage >= 301 && this.temp_roi_percentage <= 400) {
+              this.latlong[i].url = "assets/marker/plain/orange.png";
+            } else if (this.temp_roi_percentage >= 201 && this.temp_roi_percentage <= 300) {
+              this.latlong[i].url = "assets/marker/plain/red.png";
+            } else if (this.temp_roi_percentage >= 101 && this.temp_roi_percentage <= 200) {
+              this.latlong[i].url = "assets/marker/plain/marron.png";
+            } else {
+              this.latlong[i].url = "assets/marker/plain/blue.png";
+            }
+          }
         }
-      }
-    }
 
-    // Setting the current well to Blur 
-    if (this.temp_estimated_gross_cash_flow[this.index] >= this.gross_cash_flow_wo_expenses) {
-      //this.latlong[this.index].url = "assets/green_blur.png";
+        else {
+          this.yellow_count = this.yellow_count + 1;
+          //this.latlong[i].url = "assets/grey_marker.png";
 
-      if (this.sam >= 500) {
-        this.latlong[this.index].url = "assets/marker/current/green_pointer.png";
-      } else if (this.sam >= 401 && this.sam <= 500) {
-        this.latlong[this.index].url = "assets/marker/current/yellow_pointer.png";
-      } else if (this.sam >= 301 && this.sam <= 400) {
-        this.latlong[this.index].url = "assets/marker/current/orange_pointer.png";
-      } else if (this.sam >= 201 && this.sam <= 300) {
-        this.latlong[this.index].url = "assets/marker/current/red_pointer.png";
-      } else if (this.sam >= 101 && this.sam <= 200) {
-        this.latlong[this.index].url = "assets/marker/current/marron_pointer.png";
-      } else {
-        this.latlong[this.index].url = "assets/marker/current/blue_pointer.png";
-      }
-    }
+          if (i === this.index) {
+            if (this.temp_roi_percentage >= 500) {
+              this.latlong[this.index].url = "assets/marker/current/green_pointer.png";
+            } else if (this.temp_roi_percentage >= 401 && this.temp_roi_percentage <= 500) {
+              this.latlong[this.index].url = "assets/marker/current/yellow_pointer.png";
+            } else if (this.temp_roi_percentage >= 301 && this.temp_roi_percentage <= 400) {
+              this.latlong[this.index].url = "assets/marker/current/orange_pointer.png";
+            } else if (this.temp_roi_percentage >= 201 && this.temp_roi_percentage <= 300) {
+              this.latlong[this.index].url = "assets/marker/current/red_pointer.png";
+            } else if (this.temp_roi_percentage >= 101 && this.temp_roi_percentage <= 200) {
+              this.latlong[this.index].url = "assets/marker/current/marron_pointer.png";
+            } else {
+              this.latlong[this.index].url = "assets/marker/current/blue_pointer.png";
+            }
+          }
 
-    if (this.temp_estimated_gross_cash_flow[this.index] < this.gross_cash_flow_wo_expenses) {
-      //this.latlong[this.index].url = "assets/grey_blur.png";
-
-      if (this.sam >= 500) {
-        this.latlong[this.index].url = "assets/marker/current/green_pointer.png";
-      } else if (this.sam >= 401 && this.sam <= 500) {
-        this.latlong[this.index].url = "assets/marker/current/yellow_pointer.png";
-      } else if (this.sam >= 301 && this.sam <= 400) {
-        this.latlong[this.index].url = "assets/marker/current/orange_pointer.png";
-      } else if (this.sam >= 201 && this.sam <= 300) {
-        this.latlong[this.index].url = "assets/marker/current/red_pointer.png";
-      } else if (this.sam >= 101 && this.sam <= 200) {
-        this.latlong[this.index].url = "assets/marker/current/marron_pointer.png";
-      } else {
-        this.latlong[this.index].url = "assets/marker/current/blue_pointer.png";
+          else {
+            if (this.temp_roi_percentage >= 500) {
+              this.latlong[i].url = "assets/marker/plain/green.png";
+            } else if (this.temp_roi_percentage >= 401 && this.temp_roi_percentage <= 500) {
+              this.latlong[i].url = "assets/marker/plain/yellow.png";
+            } else if (this.temp_roi_percentage >= 301 && this.temp_roi_percentage <= 400) {
+              this.latlong[i].url = "assets/marker/plain/orange.png";
+            } else if (this.temp_roi_percentage >= 201 && this.temp_roi_percentage <= 300) {
+              this.latlong[i].url = "assets/marker/plain/red.png";
+            } else if (this.temp_roi_percentage >= 101 && this.temp_roi_percentage <= 200) {
+              this.latlong[i].url = "assets/marker/plain/marron.png";
+            } else {
+              this.latlong[i].url = "assets/marker/plain/blue.png";
+            }
+          }
+        }
       }
     }
 
     this.calculateows();
-    this.getTooltip();
+    //this.getTooltip();
   }
 
   // Setting Markers based Production Selected
   onProductionClick(type) {
-    var temp: any = [];
+    this.oil_price = 0;
+    this.gas_price = 0;
+    this.previous = -1;
+    this.current = -1;
+    this.index = -1;
+    this.type = type;
+    this.clicked = 1;
 
+    if (this.visit === 1) {
+      for (var i = 0; i < this.latlong.length; i++) {
+        this.latlong[i].roi_percentage = null;
+      }
+
+      for (var i = 0; i < this.markerarray.length; i++) {
+        this.infoWindowOpened = this.markerarray[i];
+        this.infoWindowOpened.close();
+      }
+
+      this.markerarray = [];
+      this.infoWindowOpened = null;
+    }
+
+    this.visit = -1;
+    this.store_display(this.current);
+    this.calculateROIPercentage(type);
+  }
+
+  // Calculate
+  calculateROIPercentage(type) {
+    var temp: any = [];
     if (type === 'first12') {
       temp = [];
       this.map_title = "First 12 Months Production Map"
@@ -459,7 +557,7 @@ export class AppComponent implements OnInit {
 
   // Dynamically Calculating the Payout Value and setting the text color to Green or Red
   calculatepayout() {
-    this.potential_profit_loss = this.estimated_gross_cash_flow - this.gross_cash_flow_wo_expenses;
+    this.potential_profit_loss = this.estimated_gross_cash_flow - this.partnership_raise;
 
     if (this.potential_profit_loss < 0) {
       this.color = 'red';
@@ -475,10 +573,11 @@ export class AppComponent implements OnInit {
       this.color = 'green';
     }
 
-    //this.roi_percentage = (Math.floor((this.estimated_gross_cash_flow * 100) / this.gross_cash_flow_wo_expenses)).toString() + "%";
+    //this.roi_percentage = (Math.floor((this.estimated_gross_cash_flow * 100) / this.partnership_raise)).toString() + "%";
 
-    this.roi_percentage = (Math.floor((this.estimated_gross_cash_flow * 100) / this.gross_cash_flow_wo_expenses));
+    this.roi_percentage = (Math.floor((this.estimated_gross_cash_flow * 100) / this.partnership_raise));
 
+    this.latlong[this.current].roi_percentage = this.temp_roi[this.current] >= 0 ? this.temp_roi[this.current] : this.roi_percentage;
 
     this.roifirsttwelve = this.calculateROI(this.firsttwelveoil, this.firsttwelvegas) + "%";
     this.roifirsttwentyfour = this.calculateROI(this.firsttwentyfouroil, this.firsttwentyfourgas) + "%";
@@ -496,9 +595,9 @@ export class AppComponent implements OnInit {
     temp2 = temp2 - (this.tax_gas * temp2); //0
     temp1 = temp1 + temp2; //848726.1
     temp1 = temp1 - ((this.production_expenses / 100) * (temp1)); //848726.1
-    tempflow = this.nri_percentage * temp1; //477408.43
+    tempflow = (this.partnership_term / 100) * temp1; //477408.43
 
-    return (Math.floor((tempflow * 100) / this.gross_cash_flow_wo_expenses));
+    return (Math.floor((tempflow * 100) / this.partnership_raise));
   }
 
   // Dynamically changing and calculating OWS Score
@@ -508,7 +607,7 @@ export class AppComponent implements OnInit {
     this.yellow_count = 0;
 
     for (var i = 0; i < this.length; i++) {
-      if (this.latlong[i].grosscashflow >= this.gross_cash_flow_wo_expenses) {
+      if (this.latlong[i].grosscashflow >= this.partnership_raise) {
         this.green_count = this.green_count + 1;
       }
 
@@ -521,19 +620,28 @@ export class AppComponent implements OnInit {
     }
 
     // Calculating the Average and OWS Score
-    this.ows_score = Math.round((this.ows_score * 100) / (this.well_count * this.gross_cash_flow_wo_expenses));
+    this.ows_score = Math.round((this.ows_score * 100) / (this.well_count * this.partnership_raise));
   }
 
-  infoWindowOpened = null;
+  markerarray: string[] = [];
   // Getting Latitude and Longitude Value of the clicked marker
   onMarkerClickLocation(pos: number, infoRef) {
-    if (this.infoWindowOpened === infoRef)
-      return;
 
-    if (this.infoWindowOpened !== null)
-      this.infoWindowOpened.close();
+    var tempmarkerarray: any = [];
+    tempmarkerarray = this.markerarray;
 
-    this.infoWindowOpened = infoRef;
+    // Removing the repeated markers from the array
+    for (var i = 0; i < this.markerarray.length; i++) {
+      if (tempmarkerarray[i]._id === infoRef._id) {
+        this.markerarray.splice(i, 1);
+      }
+    }
+
+    this.markerarray.push(infoRef);
+
+    if (this.visit !== 1 && this.type !== null) {
+      this.calculateROIPercentage(this.type);
+    }
 
     this.visit = 1;
 
@@ -565,42 +673,79 @@ export class AppComponent implements OnInit {
           this.latlong[pos].url = "assets/marker/current/blue_pointer.png";
         }
 
-        // Setting the previous selected well to Green Pink or Grey Pink
         if (this.previous != -1) {
-          if (this.temp_estimated_gross_cash_flow[this.previous] >= this.gross_cash_flow_wo_expenses) {
-            //this.latlong[this.previous].url = "assets/green_yellow.png";
+          if (this.temp_roi.length > 0) {
+            if (this.temp_estimated_gross_cash_flow[this.previous] >= this.partnership_raise) {
+              //this.latlong[this.previous].url = "assets/green_yellow.png";
 
-            if (this.roi_percentage >= 500) {
-              this.latlong[this.previous].url = "assets/marker/previous/green_border.png";
-            } else if (this.roi_percentage >= 401 && this.roi_percentage <= 500) {
-              this.latlong[this.previous].url = "assets/marker/previous/yellow_border.png";
-            } else if (this.roi_percentage >= 301 && this.roi_percentage <= 400) {
-              this.latlong[this.previous].url = "assets/marker/previous/orange_border.png";
-            } else if (this.roi_percentage >= 201 && this.roi_percentage <= 300) {
-              this.latlong[this.previous].url = "assets/marker/previous/red_border.png";
-            } else if (this.roi_percentage >= 101 && this.roi_percentage <= 200) {
-              this.latlong[this.previous].url = "assets/marker/previous/marron_border.png";
-            } else {
-              this.latlong[this.previous].url = "assets/marker/previous/blue_border.png";
+              if (this.temp_roi[this.previous] >= 500) {
+                this.latlong[this.previous].url = "assets/marker/previous/green_border.png";
+              } else if (this.temp_roi[this.previous] >= 401 && this.temp_roi[this.previous] <= 500) {
+                this.latlong[this.previous].url = "assets/marker/previous/yellow_border.png";
+              } else if (this.temp_roi[this.previous] >= 301 && this.temp_roi[this.previous] <= 400) {
+                this.latlong[this.previous].url = "assets/marker/previous/orange_border.png";
+              } else if (this.temp_roi[this.previous] >= 201 && this.temp_roi[this.previous] <= 300) {
+                this.latlong[this.previous].url = "assets/marker/previous/red_border.png";
+              } else if (this.temp_roi[this.previous] >= 101 && this.temp_roi[this.previous] <= 200) {
+                this.latlong[this.previous].url = "assets/marker/previous/marron_border.png";
+              } else {
+                this.latlong[this.previous].url = "assets/marker/previous/blue_border.png";
+              }
+
             }
+            else {
+              //this.latlong[this.previous].url = "assets/grey_yellow.png";
 
+              if (this.temp_roi[this.previous] >= 500) {
+                this.latlong[this.previous].url = "assets/marker/previous/green_border.png";
+              } else if (this.temp_roi[this.previous] >= 401 && this.temp_roi[this.previous] <= 500) {
+                this.latlong[this.previous].url = "assets/marker/previous/yellow_border.png";
+              } else if (this.temp_roi[this.previous] >= 301 && this.temp_roi[this.previous] <= 400) {
+                this.latlong[this.previous].url = "assets/marker/previous/orange_border.png";
+              } else if (this.temp_roi[this.previous] >= 201 && this.temp_roi[this.previous] <= 300) {
+                this.latlong[this.previous].url = "assets/marker/previous/red_border.png";
+              } else if (this.temp_roi[this.previous] >= 101 && this.temp_roi[this.previous] <= 200) {
+                this.latlong[this.previous].url = "assets/marker/previous/marron_border.png";
+              } else {
+                this.latlong[this.previous].url = "assets/marker/previous/blue_border.png";
+              }
+            }
           }
 
           else {
-            //this.latlong[this.previous].url = "assets/grey_yellow.png";
+            if (this.temp_estimated_gross_cash_flow[this.previous] >= this.partnership_raise) {
+              //this.latlong[this.previous].url = "assets/green_yellow.png";
 
-            if (this.roi_percentage >= 500) {
-              this.latlong[this.previous].url = "assets/marker/previous/green_border.png";
-            } else if (this.roi_percentage >= 401 && this.roi_percentage <= 500) {
-              this.latlong[this.previous].url = "assets/marker/previous/yellow_border.png";
-            } else if (this.roi_percentage >= 301 && this.roi_percentage <= 400) {
-              this.latlong[this.previous].url = "assets/marker/previous/orange_border.png";
-            } else if (this.roi_percentage >= 201 && this.roi_percentage <= 300) {
-              this.latlong[this.previous].url = "assets/marker/previous/red_border.png";
-            } else if (this.roi_percentage >= 101 && this.roi_percentage <= 200) {
-              this.latlong[this.previous].url = "assets/marker/previous/marron_border.png";
-            } else {
-              this.latlong[this.previous].url = "assets/marker/previous/blue_border.png";
+              if (this.roi_percentage >= 500) {
+                this.latlong[this.previous].url = "assets/marker/previous/green_border.png";
+              } else if (this.roi_percentage >= 401 && this.roi_percentage <= 500) {
+                this.latlong[this.previous].url = "assets/marker/previous/yellow_border.png";
+              } else if (this.roi_percentage >= 301 && this.roi_percentage <= 400) {
+                this.latlong[this.previous].url = "assets/marker/previous/orange_border.png";
+              } else if (this.roi_percentage >= 201 && this.roi_percentage <= 300) {
+                this.latlong[this.previous].url = "assets/marker/previous/red_border.png";
+              } else if (this.roi_percentage >= 101 && this.roi_percentage <= 200) {
+                this.latlong[this.previous].url = "assets/marker/previous/marron_border.png";
+              } else {
+                this.latlong[this.previous].url = "assets/marker/previous/blue_border.png";
+              }
+
+            }
+            else {
+              //this.latlong[this.previous].url = "assets/grey_yellow.png";
+              if (this.roi_percentage >= 500) {
+                this.latlong[this.previous].url = "assets/marker/previous/green_border.png";
+              } else if (this.roi_percentage >= 401 && this.roi_percentage <= 500) {
+                this.latlong[this.previous].url = "assets/marker/previous/yellow_border.png";
+              } else if (this.roi_percentage >= 301 && this.roi_percentage <= 400) {
+                this.latlong[this.previous].url = "assets/marker/previous/orange_border.png";
+              } else if (this.roi_percentage >= 201 && this.roi_percentage <= 300) {
+                this.latlong[this.previous].url = "assets/marker/previous/red_border.png";
+              } else if (this.roi_percentage >= 101 && this.roi_percentage <= 200) {
+                this.latlong[this.previous].url = "assets/marker/previous/marron_border.png";
+              } else {
+                this.latlong[this.previous].url = "assets/marker/previous/blue_border.png";
+              }
             }
           }
         }
@@ -618,40 +763,41 @@ export class AppComponent implements OnInit {
 
   // Setting & Getting Slider value 
   myOnFinish(event) {
-
-    if (event.from - 1 == -1) {
-      this.oil_price = 0;
-      this.gas_price = 0;
-    }
-
-    else {
-      if (this.oil_price == 0 && this.oil_price == 0) {
-        this.oil_price = 60;
-        this.gas_price = 3;
-      }
-    }
-
-    if (event.from - 1 != -1) {
-      this.calculate();
-      this.calculateows();
-      this.calculatepayout();
-      this.green_count = event.from;
-      this.getTooltip();
-      this.visit = 1;
-      this.store_display(event.from - 1);
-
-      this.getMarker(event.from - 1);
-    }
-
-    else {
-      this.calculate();
-      this.calculateows();
-      this.color = 'red';
-      this.potential_profit_loss = 0;
-      this.roi_percentage = 0;
-      this.green_count = 0;
-      this.getTooltip();
-    }
+    /*
+        if (event.from - 1 == -1) {
+          this.oil_price = 0;
+          this.gas_price = 0;
+        }
+    
+        else {
+          if (this.oil_price == 0 && this.gas_price == 0) {
+            this.oil_price = 60;
+            this.gas_price = 3;
+          }
+        }
+    
+        if (event.from - 1 != -1) {
+          this.calculate();
+          this.calculateows();
+          this.calculatepayout();
+          this.green_count = event.from;
+          this.getTooltip();
+          this.visit = 1;
+          this.store_display(event.from - 1);
+    
+          this.getMarker(event.from - 1);
+        }
+    
+        else {
+          this.calculate();
+          this.calculateows();
+          this.color = 'red';
+          this.potential_profit_loss = 0;
+          this.roi_percentage = 0;
+          this.green_count = 0;
+          this.getTooltip();
+        }
+    */
 
   }
 
@@ -659,18 +805,18 @@ export class AppComponent implements OnInit {
   getMarker(position: number) {
 
     if (this.index != -1) {
-      if (this.latlong[this.index].grosscashflow >= this.gross_cash_flow_wo_expenses) {
+      if (this.latlong[this.index].grosscashflow >= this.partnership_raise) {
         //this.latlong[this.index].url = "assets/green.png";
 
-        if (this.sam >= 500) {
+        if (this.temp_roi_percentage >= 500) {
           this.latlong[this.index].url = "assets/marker/plain/green.png";
-        } else if (this.sam >= 401 && this.sam <= 500) {
+        } else if (this.temp_roi_percentage >= 401 && this.temp_roi_percentage <= 500) {
           this.latlong[this.index].url = "assets/marker/plain/yellow.png";
-        } else if (this.sam >= 301 && this.sam <= 400) {
+        } else if (this.temp_roi_percentage >= 301 && this.temp_roi_percentage <= 400) {
           this.latlong[this.index].url = "assets/marker/plain/orange.png";
-        } else if (this.sam >= 201 && this.sam <= 300) {
+        } else if (this.temp_roi_percentage >= 201 && this.temp_roi_percentage <= 300) {
           this.latlong[this.index].url = "assets/marker/plain/red.png";
-        } else if (this.sam >= 101 && this.sam <= 200) {
+        } else if (this.temp_roi_percentage >= 101 && this.temp_roi_percentage <= 200) {
           this.latlong[this.index].url = "assets/marker/plain/marron.png";
         } else {
           this.latlong[this.index].url = "assets/marker/plain/blue.png";
@@ -680,15 +826,15 @@ export class AppComponent implements OnInit {
       else {
         //this.latlong[this.index].url = "assets/grey.png";
 
-        if (this.sam >= 500) {
+        if (this.temp_roi_percentage >= 500) {
           this.latlong[this.index].url = "assets/marker/plain/green.png";
-        } else if (this.sam >= 401 && this.sam <= 500) {
+        } else if (this.temp_roi_percentage >= 401 && this.temp_roi_percentage <= 500) {
           this.latlong[this.index].url = "assets/marker/plain/yellow.png";
-        } else if (this.sam >= 301 && this.sam <= 400) {
+        } else if (this.temp_roi_percentage >= 301 && this.temp_roi_percentage <= 400) {
           this.latlong[this.index].url = "assets/marker/plain/orange.png";
-        } else if (this.sam >= 201 && this.sam <= 300) {
+        } else if (this.temp_roi_percentage >= 201 && this.temp_roi_percentage <= 300) {
           this.latlong[this.index].url = "assets/marker/plain/red.png";
-        } else if (this.sam >= 101 && this.sam <= 200) {
+        } else if (this.temp_roi_percentage >= 101 && this.temp_roi_percentage <= 200) {
           this.latlong[this.index].url = "assets/marker/plain/marron.png";
         } else {
           this.latlong[this.index].url = "assets/marker/plain/blue.png";
@@ -697,18 +843,18 @@ export class AppComponent implements OnInit {
     }
 
     if (position != -1) {
-      if (this.latlong[position].grosscashflow >= this.gross_cash_flow_wo_expenses) {
+      if (this.latlong[position].grosscashflow >= this.partnership_raise) {
         //this.latlong[position].url = "assets/green_blur.png";
 
-        if (this.sam >= 500) {
+        if (this.temp_roi_percentage >= 500) {
           this.latlong[this.index].url = "assets/marker/current/green_pointer.png";
-        } else if (this.sam >= 401 && this.sam <= 500) {
+        } else if (this.temp_roi_percentage >= 401 && this.temp_roi_percentage <= 500) {
           this.latlong[this.index].url = "assets/marker/current/yellow_pointer.png";
-        } else if (this.sam >= 301 && this.sam <= 400) {
+        } else if (this.temp_roi_percentage >= 301 && this.temp_roi_percentage <= 400) {
           this.latlong[this.index].url = "assets/marker/current/orange_pointer.png";
-        } else if (this.sam >= 201 && this.sam <= 300) {
+        } else if (this.temp_roi_percentage >= 201 && this.temp_roi_percentage <= 300) {
           this.latlong[this.index].url = "assets/marker/current/red_pointer.png";
-        } else if (this.sam >= 101 && this.sam <= 200) {
+        } else if (this.temp_roi_percentage >= 101 && this.temp_roi_percentage <= 200) {
           this.latlong[this.index].url = "assets/marker/current/marron_pointer.png";
         } else {
           this.latlong[this.index].url = "assets/marker/current/blue_pointer.png";
@@ -718,15 +864,15 @@ export class AppComponent implements OnInit {
       else {
         //this.latlong[position].url = "assets/grey_blur.png";
 
-        if (this.sam >= 500) {
+        if (this.temp_roi_percentage >= 500) {
           this.latlong[this.index].url = "assets/marker/current/green_pointer.png";
-        } else if (this.sam >= 401 && this.sam <= 500) {
+        } else if (this.temp_roi_percentage >= 401 && this.temp_roi_percentage <= 500) {
           this.latlong[this.index].url = "assets/marker/current/yellow_pointer.png";
-        } else if (this.sam >= 301 && this.sam <= 400) {
+        } else if (this.temp_roi_percentage >= 301 && this.temp_roi_percentage <= 400) {
           this.latlong[this.index].url = "assets/marker/current/orange_pointer.png";
-        } else if (this.sam >= 201 && this.sam <= 300) {
+        } else if (this.temp_roi_percentage >= 201 && this.temp_roi_percentage <= 300) {
           this.latlong[this.index].url = "assets/marker/current/red_pointer.png";
-        } else if (this.sam >= 101 && this.sam <= 200) {
+        } else if (this.temp_roi_percentage >= 101 && this.temp_roi_percentage <= 200) {
           this.latlong[this.index].url = "assets/marker/current/marron_pointer.png";
         } else {
           this.latlong[this.index].url = "assets/marker/current/blue_pointer.png";
@@ -773,7 +919,7 @@ export class AppComponent implements OnInit {
 
       this.calculatepayout();
 
-      if (this.estimated_gross_cash_flow >= this.gross_cash_flow_wo_expenses) {
+      if (this.estimated_gross_cash_flow >= this.partnership_raise) {
         this.textcolor = 'green';
       }
 
@@ -802,6 +948,15 @@ export class AppComponent implements OnInit {
       this.estimated_gross_cash_flow = 0;
       this.potential_profit_loss = 0;
 
+      this.firstsixtygas = "";
+      this.firstsixtyoil = "";
+      this.firsttwelvegas = "";
+      this.firsttwelveoil = "";
+      this.firsttwentyfourgas = "";
+      this.firsttwentyfouroil = "";
+      this.lasttwelvegas = "";
+      this.lasttwelveoil = "";
+
       this.textcolor = 'red';
     }
   }
@@ -811,18 +966,23 @@ export class AppComponent implements OnInit {
     document.getElementById("tooltipText").style.display = 'none';
   }
 
+  // Reload Page
+  onReload() {
+    window.location.reload();
+  }
+
   /*-------------------------------------------------------------------------------------------------------------------*/
 
   // Hypothetical Price, Production, and Cash Flow Scenarios section calculation
   public unit_price: number = 1700000;
   public c: number = 0.1125;
-  public Hypothetical_investment_model: number = 850000;
-  public Estimated_oil_model: number = 50;
-  public Estimated_gas_model: number = 50;
-  public Estimated_oil_price_model: number = 60;
-  public Estimated_gas_price_model: number = 3;
-  public Estimated_Oil_ultimate_recovery_model = 77394;
-  public Estimated_Gas_ultimate_recovery_model = 2705;
+  public Hypothetical_investment_model: number = 0;
+  public Estimated_oil_model: number = 0;
+  public Estimated_gas_model: number = 0;
+  public Estimated_oil_price_model: number = 0;
+  public Estimated_gas_price_model: number = 0;
+  public Estimated_Oil_ultimate_recovery_model = 0;
+  public Estimated_Gas_ultimate_recovery_model = 0;
   public Projected_Lifespan: number = 0;
   public Net_Income_Difference: number = 0;
   public Actual_Dollars_At_Risk: number = 0;
@@ -833,7 +993,7 @@ export class AppComponent implements OnInit {
   public Months_to_model: number = 0;
   public Total_Potential_model: number = 0;
 
-  public Operating_Expenses_Ratio = 5;
+  public Operating_Expenses_Ratio = 0;
   public Months_to_cash_flow: number;
   public roi_percent: string = "0%";
 
@@ -869,12 +1029,24 @@ export class AppComponent implements OnInit {
     this.Total_Potential_model = temp1 - ((this.Operating_Expenses_Ratio / 100) * temp1);
 
     // Months to Payout Calculation
-    this.Months_to_model = this.Hypothetical_investment_model / this.Potential_Monthly_model;
+    if (isFinite(this.Hypothetical_investment_model / this.Potential_Monthly_model) && !isNaN(this.Hypothetical_investment_model / this.Potential_Monthly_model))
+      this.Months_to_model = this.Hypothetical_investment_model / this.Potential_Monthly_model;
+
+    else
+      this.Months_to_model = 0;
 
     // Estimated Months of Cash Flow
-    this.Months_to_cash_flow = this.Total_Potential_model / this.Potential_Monthly_model;
 
-    this.roi_percent = (Math.floor((this.Total_Potential_model * 100) / this.Hypothetical_investment_model)).toString() + "%";
+    if (isFinite(this.Total_Potential_model / this.Potential_Monthly_model) && !isNaN(this.Total_Potential_model / this.Potential_Monthly_model))
+      this.Months_to_cash_flow = this.Total_Potential_model / this.Potential_Monthly_model;
+
+    else
+      this.Months_to_cash_flow = 0;
+
+    if (isFinite(Math.floor((this.Total_Potential_model * 100) / this.Hypothetical_investment_model)) && !isNaN(Math.floor((this.Total_Potential_model * 100) / this.Hypothetical_investment_model)))
+      this.roi_percent = (Math.floor((this.Total_Potential_model * 100) / this.Hypothetical_investment_model)).toString() + "%";
+    else
+      this.roi_percent = "0%";
   }
 
   // Converting the Decimal to Fraction Part
@@ -1100,89 +1272,6 @@ export class AppComponent implements OnInit {
   }
 
   // Calculate the K1 with and without K1 value 
-  /*
-  compare_k1() {
-    let valid : number = 0;
-    if (this.Filing_Status != -1 && this.Investment_Amount_K1_model > 0) {
-
-      this.Deduction_K1 = this.Investment_Amount_K1_model * (this.k1_deduction_percentage / 100);
-      
-      this.Adjusted_Taxable_Income = this.Estimated_Taxable_Income_model;
-      this.Adjusted_Taxable_Income_K1 = this.Estimated_Taxable_Income_model - this.Deduction_K1;
-
-      for (var i = 0; i < this.data[this.Filing_Status].length; i++) {
-        if (this.data[this.Filing_Status][i].range_start <= this.Adjusted_Taxable_Income_K1 && this.Adjusted_Taxable_Income_K1 <= this.data[this.Filing_Status][i].range_end) {
-          valid = 1;
-          this.Tax_Bracket = this.data[this.Filing_Status][i].percent_on_excess / 100;
-          this.Tax_Bracket_K1 = this.data[this.Filing_Status][i].percent_on_excess_k1 / 100;
-          this.Tax_Rate_Pay_Tax = this.data[this.Filing_Status][i].tax_rate_pay_tax;
-          this.Tax_Rate_Pay_Tax_K1 = this.data[this.Filing_Status][i].tax_rate_pay_tax_k1;
-          this.Range_Start = this.data[this.Filing_Status][i].range_start;
-          break;
-        }
-        else{
-          this.Tax_Bracket = 0;
-          this.Tax_Bracket_K1 = 0;
-          this.Tax_Rate_Pay_Tax = 0;
-          this.Tax_Rate_Pay_Tax_K1 = 0;
-          this.Range_Start = 0;
-        }
-      }
-
-      if(valid == 1){
-        this.Excess_Income = this.Adjusted_Taxable_Income - this.Range_Start;
-        this.Excess_Income_K1 = this.Adjusted_Taxable_Income_K1 - this.Range_Start;
-  
-        this.Tax_On_Excess = this.Excess_Income * (this.Tax_Bracket);
-        this.Tax_On_Excess_K1 = this.Excess_Income_K1 * (this.Tax_Bracket_K1);
-  
-  
-        this.Estimated_Tax_Due = this.Tax_On_Excess + this.Tax_Rate_Pay_Tax;
-        this.Estimated_Tax_Due_K1 = this.Tax_On_Excess_K1 + this.Tax_Rate_Pay_Tax_K1;
-  
-  
-        this.Adjusted_Net_Income = this.Adjusted_Taxable_Income - this.Estimated_Tax_Due;
-        this.Adjusted_Net_Income_K1 = this.Adjusted_Taxable_Income_K1 - this.Estimated_Tax_Due_K1;
-  
-        this.Tax_Savings_K1 = this.Estimated_Tax_Due - this.Estimated_Tax_Due_K1;
-  
-        this.Tax_Liability = this.Estimated_Tax_Due;
-        this.Tax_Liability_K1 = this.Estimated_Tax_Due_K1;
-  
-        this.Partnership_Investment = this.Investment_Amount_K1_model;
-  
-        this.Income_Difference = this.Adjusted_Net_Income - this.Adjusted_Net_Income_K1;
-        this.Actual_Dollars_At_Risk = this.Investment_Amount_K1_model - this.Income_Difference;  
-      }
-
-      else{
-        this.Tax_Liability = 0;
-        this.Adjusted_Net_Income = 0;
-        this.Tax_Savings_K1 = 0;
-        this.Tax_Liability_K1 = 0;
-        this.Adjusted_Net_Income_K1 = 0;
-        this.Income_Difference = 0;
-        this.Actual_Dollars_At_Risk = 0;
-      }
-
-    }
-
-    else {
-      if(this.Filing_Status == -1 && this.Investment_Amount_K1_model == 0){
-        alert("Please select Filing Status and enter Investment Amount");        
-      }
-
-      else if (this.Filing_Status == -1) {
-        alert("Please select Filing Status");
-      }
-
-      else {
-        alert("Please enter Investment Amount");
-      }
-    }
-  }
-  */
-
   compare_k1() {
     this.Deduction_K1 = this.Investment_Amount_K1_model * 0.75;
     this.Adjusted_Taxable_Income = this.Estimated_Taxable_Income_model;
