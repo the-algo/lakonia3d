@@ -108,6 +108,8 @@ export class AppComponent implements OnInit {
     // Calling JSON Object and Parsing Value
     this.wellapplicationservices.getFiveMilesJSON().subscribe(
       JSONlat => {
+		  
+		// Fetching value and storing it in Latlong Array
         for (var i = 0; i < JSONlat.length; i++) {
           this.latlong[i] = JSONlat[i],
             error => console.log(error)
@@ -117,7 +119,10 @@ export class AppComponent implements OnInit {
         this.calculateows();
       }
     );
+	// Initial Map Title
     this.map_title = "Overall Production Map";
+
+	// Initialize Lower Panels
     this.hypothetical();
     this.intializeData();
   }
@@ -140,10 +145,12 @@ export class AppComponent implements OnInit {
 
     this.map_title = "Overall Production Map";
 
+	// Removing the data from the Latlong Array
     while (this.latlong.length > 0) {
       this.latlong.pop();
     }
 
+	// Setting the map based on the selection of the Miles
     if (miles === "One Mile") {
       this.wellapplicationservices.getOneMileJSON().subscribe(
         JSONlat => {
@@ -282,6 +289,7 @@ export class AppComponent implements OnInit {
     this.green_count = 0;
     this.yellow_count = 0;
 
+	// Info Window Closing and Showing
     if (this.visit != -1) {
       for (var i = 0; i < this.latlong.length; i++) {
         this.latlong[i].roi_percentage = null;
@@ -331,7 +339,7 @@ export class AppComponent implements OnInit {
 
       this.temp_roi_percentage = Math.floor((this.temp_estimated_gross_cash_flow[i] * 100) / this.partnership_raise);
 
-
+	  // Setting the Selected Marker with pointer and creating audit trail
       if (this.clicked === 1) {
         if (this.temp_roi.length > 0) {
           for (var i = 0; i < this.temp_roi.length - 1; i++) {
@@ -370,6 +378,7 @@ export class AppComponent implements OnInit {
         }
       }
 
+	  
       else {
         if (this.temp_estimated_gross_cash_flow[i] >= this.partnership_raise) {
           this.green_count = this.green_count + 1;
@@ -451,7 +460,7 @@ export class AppComponent implements OnInit {
     //this.getTooltip();
   }
 
-  // Setting Markers based Production Selected
+  // Setting Markers based on Production Selected
   onProductionClick(type) {
     this.oil_price = 0;
     this.gas_price = 0;
