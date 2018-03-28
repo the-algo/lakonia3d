@@ -134,6 +134,14 @@ i:active:after {
     text-align: center;
     padding: 5px
 }
+#icon4 {
+    color: white;
+    background-color: black;
+    height: 36px;
+    width: 36px;
+    text-align: center;
+    padding: 5px
+}
 
 .panel-heading {
     padding: 0;
