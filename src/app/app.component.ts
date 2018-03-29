@@ -1340,6 +1340,10 @@ export class AppComponent implements OnInit {
       icon = "icon1";
     }
 
+    if (idname === "accordion3") {
+      icon = "icon3";
+    }
+
     if (idname === "accordion4") {
       icon = "icon4";
     }
@@ -1378,6 +1382,20 @@ export class AppComponent implements OnInit {
             }
           }
       
+
+          if (icon === "icon3") {
+            
+            if (document.getElementById("icon3").className === "glyphicon glyphicon-minus") {
+              document.getElementById("icon3").className = "glyphicon glyphicon-plus";
+            }
+      
+            if (cN === "glyphicon glyphicon-plus") {
+              document.getElementById(icon).className = "glyphicon glyphicon-minus";
+            }
+            else {
+              document.getElementById(icon).className = "glyphicon glyphicon-plus";
+            }
+          }
   
 
 
