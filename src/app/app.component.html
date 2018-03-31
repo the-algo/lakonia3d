@@ -9,7 +9,7 @@
                                     <h2 class="panel-title">
                                         <div class="row" id="heading">
                                             <div class="col-md-6">
-                                               <span id="icon3" class="glyphicon glyphicon-plus"></span>&nbsp;OWS-Close-ology Map 
+                                               <span id="icon3" class="glyphicon glyphicon-minus"></span>&nbsp;OWS-Close-ology Map 
                                            </div>
                                            <div class="col-md-6" style="text-align: right;">
                                                  <img src="assets/logo.png" height="45px"> 
@@ -176,7 +176,7 @@
                                                         <div class="col-md-5" style="padding-top: 5px;">Partnership Raise:</div>
                                                         <div class="col-md-5">
                                                             <div class="input-group">
-                                                                <input type="number" [(ngModel)]="partnership_raise" min="0" (change)="calculate()" class="form-control" />
+                                                                <input type="currency" [(ngModel)]="partnership_raise" min="0" (change)="calculate()" class="form-control" />
                                                                 <span class="input-group-addon" style="font-weight:bold">&nbsp;$&nbsp;</span>
                                                             </div>
                                                         </div>

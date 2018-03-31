@@ -8,6 +8,8 @@ import { IonRangeSliderModule } from "ng2-ion-range-slider";
 import { AccordionModule } from 'ng2-accordion';
 import { WellApplicationServices } from './well-application.service';
 import { AgmCoreModule } from '@agm/core';
+import { PricesService } from './prices.service';
+
 
 @NgModule({
   declarations: [
@@ -25,8 +27,10 @@ import { AgmCoreModule } from '@agm/core';
     })
   ],
   providers: [
-    WellApplicationServices
+    WellApplicationServices,
+    PricesService
   ],
+ 
   bootstrap: [AppComponent]
 })
 export class AppModule { }

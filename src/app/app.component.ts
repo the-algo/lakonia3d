@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { WellApplicationServices } from './well-application.service';
+import { PricesService } from './prices.service';
 
 @Component({
   selector: 'app-root',
@@ -100,11 +101,22 @@ export class AppComponent implements OnInit {
   public partnership_term = 56.25;
 
   // Dependency Injection
-  constructor(private wellapplicationservices: WellApplicationServices) {
+  constructor(private wellapplicationservices: WellApplicationServices, public price: PricesService) {
   }
 
   // Initializing the Data to Map and Panels
   ngOnInit() {
+    this.price.getOilPrice().subscribe(res => {
+      this.oil_price = res.data[0][6]
+      console.log(this.oil_price);
+    })
+
+    this.price.getGasPrice().subscribe(res => {
+      this.gas_price = res.data[0][6];
+      this.gas_price = parseFloat(this.gas_price.toFixed(2));
+      console.log(this.gas_price);
+    })
+
     // Calling JSON Object and Parsing Value
     this.wellapplicationservices.getFiveMilesJSON().subscribe(
       JSONlat => {
@@ -1385,15 +1397,15 @@ export class AppComponent implements OnInit {
 
           if (icon === "icon3") {
             
-            if (document.getElementById("icon3").className === "glyphicon glyphicon-minus") {
-              document.getElementById("icon3").className = "glyphicon glyphicon-plus";
+            if (document.getElementById("icon3").className === "glyphicon glyphicon-plus") {
+              document.getElementById("icon3").className = "glyphicon glyphicon-minus";
             }
       
-            if (cN === "glyphicon glyphicon-plus") {
-              document.getElementById(icon).className = "glyphicon glyphicon-minus";
+            if (cN === "glyphicon glyphicon-minus") {
+              document.getElementById(icon).className = "glyphicon glyphicon-plus";
             }
             else {
-              document.getElementById(icon).className = "glyphicon glyphicon-plus";
+              document.getElementById(icon).className = "glyphicon glyphicon-minus";
             }
           }
   
