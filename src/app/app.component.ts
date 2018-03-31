@@ -147,9 +147,18 @@ export class AppComponent implements OnInit {
 
   // Get the selected Miles from the Radio Button to set the markers on Map
   getMiles(miles: string) {
+    this.price.getOilPrice().subscribe(res => {
+      this.oil_price = res.data[0][6]
+      console.log(this.oil_price);
+    })
 
-    this.oil_price = 0;
-    this.gas_price = 0;
+    this.price.getGasPrice().subscribe(res => {
+      this.gas_price = res.data[0][6];
+      this.gas_price = parseFloat(this.gas_price.toFixed(2));
+      console.log(this.gas_price);
+    })
+   // this.oil_price = 0;
+   // this.gas_price = 0;
     this.infoWindowOpened = null;
     this.markerarray = [];
     this.type = null;
@@ -474,8 +483,19 @@ export class AppComponent implements OnInit {
 
   // Setting Markers based on Production Selected
   onProductionClick(type) {
-    this.oil_price = 0;
-    this.gas_price = 0;
+
+    this.price.getOilPrice().subscribe(res => {
+      this.oil_price = res.data[0][6]
+      console.log(this.oil_price);
+    })
+
+    this.price.getGasPrice().subscribe(res => {
+      this.gas_price = res.data[0][6];
+      this.gas_price = parseFloat(this.gas_price.toFixed(2));
+      console.log(this.gas_price);
+    })
+    //this.oil_price = 0;
+    //this.gas_price = 0;
     this.previous = -1;
     this.current = -1;
     this.index = -1;
